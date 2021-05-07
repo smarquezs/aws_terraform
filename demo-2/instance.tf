@@ -8,6 +8,10 @@ resource "aws_instance" "example" {
   instance_type = "t2.micro"
   key_name = aws_key_pair.mykey.key_name
 
+  tags = {
+    Name = "example"
+  }
+
   provisioner "file" {
     source = "script.sh"
     destination = "/tmp/script.sh"
@@ -23,6 +27,7 @@ resource "aws_instance" "example" {
   provisioner "local-exec" {
     command = "echo ${aws_instance.example.private_ip} >> private_ips.txt"
   }
+
   connection {
     host        = self.public_ip
     type        = "ssh"
