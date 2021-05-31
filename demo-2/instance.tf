@@ -1,12 +1,7 @@
-resource "aws_key_pair" "mykey" {
-  key_name = "mykey"
-  public_key = file(var.PATH_TO_PUBLIC_KEY)
-}
-
 resource "aws_instance" "example" {
   ami = "ami-09e67e426f25ce0d7"
-  instance_type = "t2.micro"
-  key_name = aws_key_pair.mykey.key_name
+  instance_type = "t2.small"
+  key_name = "example"
 
   tags = {
     Name = "example"
@@ -17,10 +12,34 @@ resource "aws_instance" "example" {
     destination = "/tmp/script.sh"
   }
 
+  provisioner "file" {
+    source = "webapp.conf"
+    destination = "/tmp/webapp.conf"
+  }
+
+  provisioner "file" {
+    source = "index.html"
+    destination = "/tmp/index.html"
+  }
+
+  provisioner "file" {
+    source = "passenger.sh"
+    destination = "/tmp/passenger.sh"
+  }
+
   provisioner "remote-exec" {
     inline = [
       "chmod +x /tmp/script.sh",
-      "sudo /tmp/script.sh",
+      "/tmp/script.sh",
+      "sleep 180"
+    ]
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/passenger.sh",
+      "/tmp/passenger.sh",
+      "sleep 10"
     ]
   }
 
@@ -31,8 +50,8 @@ resource "aws_instance" "example" {
   connection {
     host        = self.public_ip
     type        = "ssh"
-    user        = var.INSTANCE_USERNAME
-    private_key = file(var.PATH_TO_PRIVATE_KEY)
+    user        = "ubuntu"
+    private_key = file("${pathexpand("~/.ssh/example.pem")}")
   }
 }
 
